@@ -37,8 +37,9 @@ $ wa send "Alex" "on my way"
 1. On first run (`wa auth login`) a QR code appears in your terminal
 2. You scan it with your phone → **WhatsApp → Linked Devices → Link a Device**
 3. The browser session is saved **locally** to `~/.whatsapp-cli/auth/` — scan once, reuse forever
-4. Every command spins up a headless Chromium, authenticates with the saved session, does the job, then exits
-5. **No data ever leaves your machine.** No backend, no API key, no relay server
+4. **Option A (default):** Every command spins up a headless Chromium, authenticates with the saved session, does the job, then exits — takes 15–30 s per command
+5. **Option B (recommended):** Run `wa daemon start` once — Chromium starts once and stays alive in the background. Subsequent commands respond in **< 1 second** via a local socket
+6. **No data ever leaves your machine.** No backend, no API key, no relay server
 
 ---
 
@@ -90,6 +91,30 @@ The session is saved to `~/.whatsapp-cli/auth/`. You will never need to scan aga
 ---
 
 ## Commands
+
+### ⚡ Speed up all commands with the background daemon
+
+By default every `wa` command starts a fresh Chrome process — that costs 15–30 seconds. The **daemon** eliminates this by keeping one session alive:
+
+```bash
+# Start the daemon once (blocks until WhatsApp is ready)
+wa daemon start
+
+# All subsequent commands run in < 1 s:
+wa chats
+wa open "Alex"
+wa send "Sara" "hey!"
+
+# Check whether it is running:
+wa daemon status
+
+# Shut it down when you are done:
+wa daemon stop
+```
+
+No extra flags needed — every command automatically detects and uses the daemon.
+
+---
 
 ### List all chats
 
@@ -159,6 +184,9 @@ wa auth logout   # remove saved session from your machine
 ## Full command reference
 
 ```
+wa daemon start                             Start background daemon (run once)
+wa daemon stop                              Stop the daemon
+wa daemon status                            Show daemon status
 wa chats                                    List all chats
 wa open "<name>" [--limit N | -n N]         Show last N messages (default 20)
 wa send "<name>" "<message>"                Send a text message
@@ -189,13 +217,26 @@ npm run clean      # delete dist/
 ### Your data stays local — always
 
 | What | Where stored | Pushed to GitHub |
-|------|-------------|-----------------|
+|------|-------------|------------------|
 | WhatsApp session (cookies/keys) | `~/.whatsapp-cli/auth/` | Never (in `.gitignore`) |
 | App config | `~/.whatsapp-cli/config.yml` | Never |
 | Logs | `~/.whatsapp-cli/logs/` | Never |
+| Daemon state (PID + port + token) | `~/.whatsapp-cli/daemon.json` | Never |
 | Messages | Only in memory during the command | Never persisted to disk |
 
 Session files are stored in your **home directory** (not inside the project folder), so they cannot be accidentally committed.
+
+### Daemon security model
+
+When you run `wa daemon start`, a background process listens on a **localhost-only** TCP port (`127.0.0.1:RANDOM`). It cannot be reached from any other machine on your network. The following measures prevent other processes on *your* machine from accessing it:
+
+| Measure | Detail |
+|---------|--------|
+| **Secret token** | A 64-character random hex token is generated at startup using `crypto.randomBytes`. Every IPC request must include this token or it is rejected immediately. |
+| **Timing-safe comparison** | Token comparison uses `crypto.timingSafeEqual` to prevent timing-based token guessing. |
+| **File permissions** | `~/.whatsapp-cli/daemon.json` (which stores the token and port) is written with mode `0o600` — readable only by the owner, not by other OS users. |
+| **Localhost binding** | The daemon binds to `127.0.0.1`, not `0.0.0.0`. It is completely unreachable from outside your machine. |
+| **No persistent message storage** | Messages fetched over IPC are held in memory only for the duration of the command. Nothing is written to disk. |
 
 ### What has access to your messages
 
@@ -221,10 +262,11 @@ A malicious `dist/cli.js` could silently send your session credentials anywhere.
 
 | Threat | Mitigation |
 |--------|-----------|
-| Session files committed to Git | `.gitignore` blocks all auth directories and the dist/ folder |
+| Session files committed to Git | `.gitignore` blocks all auth directories and `dist/` |
 | Malicious fork with pre-built binary | Always build from source yourself |
 | Network traffic going somewhere unexpected | All traffic goes to `web.whatsapp.com` only (same as browser WhatsApp Web) |
-| Another local process reading your session | Standard OS file permissions on `~/.whatsapp-cli/` |
+| Another local user reading your session or daemon | `~/.whatsapp-cli/` files are in your home dir; `daemon.json` is written 0o600 (owner-only) |
+| Another local process hijacking the daemon socket | Random secret token is required for every RPC call; token is stored in owner-only `daemon.json` |
 
 ---
 
@@ -259,11 +301,20 @@ source/
     open.tsx               wa open
     send.tsx               wa send
     reply.tsx              wa reply
+    daemon/
+      index.tsx            wa daemon  (help screen)
+      start.tsx            wa daemon start
+      stop.tsx             wa daemon stop
+      status.tsx           wa daemon status
     auth/
       login.tsx            wa auth login
       logout.tsx           wa auth logout
+  daemon/
+    server.ts              Daemon process — WhatsApp session + TCP RPC server
+    state.ts               Shared state-file types and helpers
   utils/
-    connect.ts             Boot client and wait for ready
+    connect.ts             Boot client (fast path: IPC, slow path: Puppeteer)
+    ipc.ts                 Daemon IPC client + tryConnectDaemon()
     message-parser.ts      Format timestamps, previews, ack symbols
     logger.ts              File-based logger
   types/

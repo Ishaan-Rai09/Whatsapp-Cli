@@ -10,7 +10,7 @@ import React, {useState, useEffect} from 'react';
 import {Box, Text, useApp} from 'ink';
 import {connectClient} from '../utils/connect.js';
 import {formatMessageTime, getMessagePreview} from '../utils/message-parser.js';
-import type {WhatsAppClient} from '../client.js';
+import type {ClientHandle} from '../utils/connect.js';
 import type {Thread} from '../types/whatsapp.js';
 
 type State =
@@ -26,7 +26,7 @@ export default function Chats() {
 	});
 
 	useEffect(() => {
-		let client: WhatsAppClient | undefined;
+		let client: ClientHandle | undefined;
 		(async () => {
 			try {
 				client = await connectClient();

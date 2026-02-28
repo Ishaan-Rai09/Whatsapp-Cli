@@ -14,7 +14,7 @@ if (values.production) {
 }
 
 const buildOptions = {
-	entryPoints: ['source/cli.ts', 'source/commands/**/*.tsx'],
+	entryPoints: ['source/cli.ts', 'source/daemon/server.ts', 'source/commands/**/*.tsx'],
 	bundle: true,
 	platform: 'node',
 	format: 'esm',

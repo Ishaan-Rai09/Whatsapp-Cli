@@ -20,6 +20,10 @@ export default function Index() {
 					<Text bold>Commands:</Text>
 					<Text dimColor>  First time setup:</Text>
 					<Text>    <Text color="cyan">auth login</Text>                           Scan QR to connect your account</Text>
+					<Text dimColor>  Speed up all commands (recommended):</Text>
+					<Text>    <Text color="cyan">daemon start</Text>                         Start background session daemon</Text>
+					<Text>    <Text color="cyan">daemon stop</Text>                          Stop the daemon</Text>
+					<Text>    <Text color="cyan">daemon status</Text>                        Check daemon status</Text>
 					<Text dimColor>  Chats:</Text>
 					<Text>    <Text color="cyan">chats</Text>                                List all chats</Text>
 					<Text>    <Text color="cyan">{`open "Name" [--limit N]`}</Text>          Show last N messages</Text>

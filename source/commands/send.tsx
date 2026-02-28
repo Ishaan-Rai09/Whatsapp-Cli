@@ -16,7 +16,7 @@ import {option} from 'pastel';
 import zod from 'zod';
 import path from 'node:path';
 import {connectClient} from '../utils/connect.js';
-import type {WhatsAppClient} from '../client.js';
+import type {ClientHandle} from '../utils/connect.js';
 
 export const args = zod
 	.tuple([zod.string().describe('Chat name (full or partial match)')])
@@ -57,7 +57,7 @@ export default function Send({
 	const bodyText = bodyParts.join(' ');
 
 	useEffect(() => {
-		let client: WhatsAppClient | undefined;
+		let client: ClientHandle | undefined;
 		(async () => {
 			try {
 				if (!file && !bodyText) {

@@ -13,7 +13,7 @@ import React, {useState, useEffect} from 'react';
 import {Text, useApp} from 'ink';
 import zod from 'zod';
 import {connectClient} from '../utils/connect.js';
-import type {WhatsAppClient} from '../client.js';
+import type {ClientHandle} from '../utils/connect.js';
 
 export const args = zod
 	.tuple([
@@ -42,7 +42,7 @@ export default function Reply({args: [chatName, indexStr, ...replyParts]}: Props
 	const msgIndex = Number.parseInt(indexStr, 10);
 
 	useEffect(() => {
-		let client: WhatsAppClient | undefined;
+		let client: ClientHandle | undefined;
 		(async () => {
 			try {
 				if (!replyText) {

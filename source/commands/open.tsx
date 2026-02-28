@@ -14,7 +14,7 @@ import {option} from 'pastel';
 import zod from 'zod';
 import {connectClient} from '../utils/connect.js';
 import {formatMessageTime, getMessagePreview} from '../utils/message-parser.js';
-import type {WhatsAppClient} from '../client.js';
+import type {ClientHandle} from '../utils/connect.js';
 import type {Thread, Message} from '../types/whatsapp.js';
 
 export const args = zod.tuple([
@@ -54,7 +54,7 @@ export default function Open({
 	});
 
 	useEffect(() => {
-		let client: WhatsAppClient | undefined;
+		let client: ClientHandle | undefined;
 		(async () => {
 			try {
 				client = await connectClient();
