@@ -1,0 +1,59 @@
+{
+	"name": "whatsapp-cli",
+	"description": "A terminal-based WhatsApp client using WhatsApp Web",
+	"version": "1.0.0",
+	"license": "MIT",
+	"keywords": [
+		"whatsapp",
+		"cli",
+		"terminal",
+		"tui",
+		"ink",
+		"typescript",
+		"react",
+		"whatsapp-web",
+		"command-line"
+	],
+	"bin": {
+		"whatsapp-cli": "dist/cli.js",
+		"wa": "dist/cli.js"
+	},
+	"type": "module",
+	"engines": {
+		"node": ">=20"
+	},
+	"scripts": {
+		"build": "node esbuild.config.mjs --production",
+		"dev": "node esbuild.config.mjs --watch",
+		"start": "node esbuild.config.mjs --production && node dist/cli.js",
+		"login": "node esbuild.config.mjs --production && node dist/cli.js auth login",
+		"chats": "node esbuild.config.mjs --production && node dist/cli.js chats",
+		"clean": "rimraf dist"
+	},
+	"files": [
+		"dist"
+	],
+	"dependencies": {
+		"@inkjs/ui": "^2.0.0",
+		"fuse.js": "^7.1.0",
+		"ink": "^6.3.1",
+		"ink-big-text": "^2.0.0",
+		"ink-gradient": "^3.0.0",
+		"ink-text-input": "^6.0.0",
+		"js-yaml": "^4.1.0",
+		"pastel": "^4.0.0",
+		"qrcode": "^1.5.4",
+		"react": "^19.0.0",
+		"read-package-up": "^11.0.0",
+		"whatsapp-web.js": "^1.26.0",
+		"zod": "^4.3.6"
+	},
+	"devDependencies": {
+		"@types/js-yaml": "^4.0.9",
+		"@types/node": "^22.15.29",
+		"@types/qrcode": "^1.5.5",
+		"@types/react": "^19.1.6",
+		"esbuild": "^0.25.5",
+		"typescript": "^5.8.3"
+	}
+}
